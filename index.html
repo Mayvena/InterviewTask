@@ -1,0 +1,139 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+
+    </style>
+    <script>
+        let dataObject = {
+            props: {
+                styling: "wplay",
+                openTermsInCustomLightbox: "false",
+                promoCodeDisplay: "basic",
+                promoCodeSize: "5",
+            },
+            meta: {
+                styling: {
+                    description: "The theme supports several color schemes",
+                    type: "dropdown",
+                    defaultValue: "winner",
+                    values: [
+                        { winner: "Winner" },
+                        { sunvegas: "SunVegas" },
+                        { wplay: "Wplay" },
+                    ],
+                    label: "Select styling",
+                },
+                openTermsInCustomLightbox: {
+                    description:
+                        "Hides close button from storeCardCredentials static page and applies popup styles to the scc terms window.",
+                    type: "checkbox",
+                    defaultValue: "false",
+                    label: "Open SCC terms in custom lightbox",
+                },
+                promoCodeDisplay: {
+                    description:
+                        "Display promo code",
+                    type: "radio",
+                    defaultValue: "",
+                    values: [
+                        { basic: "Basic" },
+                        { advanced: "Advanced" },
+                    ],
+                    label: "Display promo code",
+                },
+                promoCodeSize: {
+                    description:
+                        "Defines the size of the promo code field",
+                    type: "input",
+                    defaultValue: "",
+                    label: "Promo code size",
+                },
+            }
+        }
+
+        function init(){
+            for (key in dataObject.meta){
+                console.log(key)
+                console.log(dataObject.meta[key].type)
+                componentFactory(dataObject.meta[key]);
+            }
+        }
+
+        function componentFactory(componentData){
+            console.log(componentData.type)
+            switch(componentData.type){
+                case "dropdown": createDropdown(componentData);
+                break;
+                case "checkbox": createCheckbox(componentData);
+                break;
+                case "radio": createRadio(componentData);
+                break;
+                case "input": createTextInput(componentData);
+                break;
+                default: console.log("Incorrect component type for component \""+componentData.label+"\"");
+            }
+        }
+
+        function createDropdown(componentData){
+            console.log("createDropdown called with component data:");
+            console.log(componentData);
+
+            let dropDown = document.createElement 
+        }
+
+        function createCheckbox(componentData){
+            console.log("createCheckbox called with component data:")
+            console.log(componentData)
+        }
+
+        function createRadio(componentData){
+            console.log("createRadio called with component data:")
+            console.log(componentData)
+        }
+
+        function createTextInput(componentData){
+            console.log("createTextInput called with component data:")
+            console.log(componentData)
+        }
+
+        function setDefaults(){
+
+        }
+
+        function resetToInitial(){
+
+        }
+
+        function saveValues(){
+
+        }
+
+        init();
+
+
+
+
+
+
+    </script>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="form">
+            <div class="form-header">
+
+            </div>
+            <div class="form-components">
+
+            </div>
+            <div class="form-actions">
+
+            </div>
+        </div>
+    </div>
+</body>
+</html>
