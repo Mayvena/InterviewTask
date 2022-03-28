@@ -5,6 +5,47 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <style>
+        .dd{
+            background-color: blueviolet;
+        }
+
+        .popup{
+            /* display: flex; */
+            position: absolute;
+            width: 50%;
+            top: 50%;
+            left: 50%;
+            /* transform: translateY(-50%); */
+            transform: translate(-50%, -50%);
+            /* margin: 0 auto; */
+            height: auto;
+            min-height: 100px;
+            background-color: #555555;
+            border: 1px solid black;
+            border-radius: 4px;
+            padding: 0.5em 2em;
+        }
+
+        .popup-header{
+            /* display: flex; */
+            position: relative;
+            width: 100%;
+        }
+
+        .popup-heading{
+            
+        }
+
+        .close{
+            position: relative;
+            right: 0px;
+            width: 1em;
+            cursor: default;
+        }
+
+        .gone{
+            display: none;
+        }
 
     </style>
     <script>
@@ -54,11 +95,15 @@
                 },
             }
         }
+        let currentKey = ''
 
         function init(){
-            for (key in dataObject.meta){
-                console.log(key)
+            console.log('initial data object: ');
+            console.log(dataObject);
+            for (let key in dataObject.meta){
+                console.log('key: ' + key)
                 console.log(dataObject.meta[key].type)
+                currentKey = key;
                 componentFactory(dataObject.meta[key]);
             }
         }
@@ -66,37 +111,101 @@
         function componentFactory(componentData){
             console.log(componentData.type)
             switch(componentData.type){
-                case "dropdown": createDropdown(componentData);
+                case 'dropdown': createDropdown(componentData);
                 break;
-                case "checkbox": createCheckbox(componentData);
+                case 'checkbox': createCheckbox(componentData);
                 break;
-                case "radio": createRadio(componentData);
+                case 'radio': createRadio(componentData);
                 break;
-                case "input": createTextInput(componentData);
+                case 'input': createTextInput(componentData);
                 break;
-                default: console.log("Incorrect component type for component \""+componentData.label+"\"");
+                default: console.log('Incorrect component type for component \''+componentData.label+'\'');
             }
         }
 
         function createDropdown(componentData){
-            console.log("createDropdown called with component data:");
+            console.log('createDropdown called with component data:');
             console.log(componentData);
 
-            let dropDown = document.createElement 
+            let dropDown = document.createElement('div');
+            dropDown.classList.add('dd');
+
+            dropDown.appendChild(generateLabel(componentData.label));
+
+            let select = document.createElement('select');
+            select.setAttribute('name', currentKey);
+            select.id = currentKey;
+            dropDown.appendChild(select);
+
+            for (let i = 0; i < componentData.values.length; i++){
+                let keyI = Object.keys(componentData.values[i])[0];
+                let keyVal = componentData.values[i][Object.keys(componentData.values[i])[0]];
+                let option = document.createElement('option');
+                option.value = keyI;
+                option.innerHTML = keyVal;
+                select.appendChild(option);
+            }
+
+            dropDown.appendChild(generateTooltip(componentData.description));
+
+            addComponent(dropDown, 'form-components');
         }
 
         function createCheckbox(componentData){
-            console.log("createCheckbox called with component data:")
-            console.log(componentData)
+            console.log('createCheckbox called with component data:');
+            console.log(componentData);
+
+            let checkBox = document.createElement('div');
+            checkBox.classList.add('cb');
+
+            checkBox.appendChild(generateLabel(componentData.label));
+
+            let input = document.createElement('input');
+            input.setAttribute('name', currentKey);
+            input.id = currentKey;
+            input.setAttribute('type', 'checkbox');
+            input.value = currentKey;
+            checkBox.appendChild(input);
+
+            checkBox.appendChild(generateTooltip(componentData.description));
+
+            addComponent(checkBox, 'form-components');
+
         }
 
         function createRadio(componentData){
-            console.log("createRadio called with component data:")
+            console.log('createRadio called with component data:')
             console.log(componentData)
+
+            let radio = document.createElement('div');
+            radio.classList.add('rd');
+
+            radio.appendChild(generateLabel(componentData.label));
+
+            let radioGroup = document.createElement('div');
+            radioGroup.classList.add('radio-group');
+            for (let i = 0; i < componentData.values.length; i++){
+                let keyI = Object.keys(componentData.values[i])[0];
+                let keyVal = componentData.values[i][Object.keys(componentData.values[i])[0]];
+                let option = document.createElement('input');
+                option.setAttribute('name', currentKey);
+                option.id = keyI;
+                option.setAttribute('type', 'radio');
+                option.value = keyVal;
+
+                radioGroup.appendChild(generateLabel(keyVal, keyI))
+                radioGroup.appendChild(option);
+
+            }
+            radio.appendChild(radioGroup);
+
+            radio.appendChild(generateTooltip(componentData.description));
+
+            addComponent(radio, 'form-components');
         }
 
         function createTextInput(componentData){
-            console.log("createTextInput called with component data:")
+            console.log('createTextInput called with component data:')
             console.log(componentData)
         }
 
@@ -110,29 +219,79 @@
 
         function saveValues(){
 
+            for (let key in dataObject.meta){
+                console.log(document.getElementsByName(key) );
+            }
+
+            document.getElementById('popup-content').innerHTML = generateSavedProps();
+            showPopup();
         }
 
-        init();
+        function generateLabel(text, target){
+            let label = document.createElement('label');
+            target ? label.setAttribute('for', target) : label.setAttribute('for', currentKey);
+            label.innerHTML = text;
+            return label;
+        }
 
+        function generateTooltip(text){
+            let tooltip = document.createElement('span');
+            tooltip.classList.add('tooltip');
+            tooltip.innerHTML = text;
+            return tooltip;
+        }
 
+        function addComponent(component, parent){
+            console.log('addComponenent called')
+            let el = document.getElementsByClassName(parent)[0];
+            el.appendChild(component);
+        }
 
+        function generateSavedProps(){
+            htmlString = '<ul class="final-data">';
+            for (let key in dataObject.props){
+                htmlString += '<li>' + key + ': ' + dataObject.props[key] + '</li>';
+            }
+            htmlString += '</ul>'
 
+            return htmlString;
+        }
 
+        function showPopup(){
+            document.getElementById('popup').classList.remove('gone')
+        }
+
+        function hidePopup(){
+            document.getElementById('popup').classList.add('gone')
+        }
+        
+        document.addEventListener('DOMContentLoaded', (e) => {
+            init();
+        });
 
     </script>
 </head>
 <body>
-    <div class="wrapper">
-        <div class="form">
-            <div class="form-header">
+    <div class='wrapper'>
+        <div class='form'>
+            <div class='form-header'>
 
             </div>
-            <div class="form-components">
+            <div class='form-components'>
 
             </div>
-            <div class="form-actions">
-
+            <div class='form-actions'>
+                <button type='button' onclick='setDefaults()'>Set Defaults</button>
+                <button type='button' onclick='resetToInitial()'>Reset</button>
+                <button type='button' onclick='saveValues()'>Save</button>
             </div>
+        </div>
+        <div id='popup' class='popup gone'>
+            <div class='popup-header'>
+                <span class='popup-heading'>Current data:</span>
+                <span class='close' id='close' onclick='hidePopup()'>&#10060;</span>
+            </div>
+            <div id='popup-content' class='popup-content'></div>
         </div>
     </div>
 </body>
