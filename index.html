@@ -1,39 +1,98 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <style>
-        .dd{
-            background-color: blueviolet;
+        .wrapper{
+            height: 100%;
+        }
+
+        .form{
+            width: 50%;
+            margin: 0 auto;
+            background-color: #a9a9a9;
+            border: 1px solid black;
+            border-radius: 5px;
+            padding: 10px;
+            position: relative;
+            top: 33%;
+        }
+
+        .form-header{
+            margin-bottom: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .container{
+            margin-bottom: 10px;
+            display: flex;
+        }
+
+        .tooltiptext{
+            visibility: hidden;
+            width: 160px;
+            background-color: #555555;
+            color: #fff;
+            text-align: center;
+            border: 1px solid black;
+            border-radius: 6px;
+            padding: 5px 0;
+
+            position: absolute;
+            z-index: 1;
+        }
+
+        .container:hover .tooltiptext{
+            visibility: visible;
+        }
+
+        label{
+            width: 50%;
+        }
+
+        .form-actions{
+            display: flex;
+            flex-flow: column;
+        }
+
+        .popup-fader{
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background-color: black;
+            opacity: 0.5;
+            z-index: 10;
         }
 
         .popup{
-            /* display: flex; */
+            z-index: 20;
             position: absolute;
             width: 50%;
             top: 50%;
             left: 50%;
-            /* transform: translateY(-50%); */
             transform: translate(-50%, -50%);
-            /* margin: 0 auto; */
             height: auto;
             min-height: 100px;
             background-color: #555555;
             border: 1px solid black;
+            color: lightgray;
             border-radius: 4px;
             padding: 0.5em 2em;
         }
 
         .popup-header{
-            /* display: flex; */
-            position: relative;
+            display: flex;
             width: 100%;
         }
 
         .popup-heading{
-            
+            width: inherit;
+            text-align: center;
+            font-weight: bold;
         }
 
         .close{
@@ -49,6 +108,9 @@
 
     </style>
     <script>
+
+        // Variables: 
+
         let dataObject = {
             props: {
                 styling: "wplay",
@@ -95,137 +157,310 @@
                 },
             }
         }
-        let currentKey = ''
 
-        function init(){
-            console.log('initial data object: ');
-            console.log(dataObject);
-            for (let key in dataObject.meta){
-                console.log('key: ' + key)
-                console.log(dataObject.meta[key].type)
-                currentKey = key;
-                componentFactory(dataObject.meta[key]);
+        let componentList = [];
+
+        // Classes: 
+
+        class DropDown{
+            constructor(component, componentData){
+                this.name = component;
+                this.label = componentData.label;
+                this.description = componentData.description;
+                this.defaultValue = componentData.defaultValue;
+                this.initialValue = dataObject.props[component];
+                this.values = componentData.values;
+
+                this.initialize();
+            }
+
+            initialize(){
+                let dropDown = document.createElement('div');
+                dropDown.classList.add('container');
+                dropDown.classList.add('dropdown-container');
+
+                dropDown.appendChild(generateLabel(this.label));
+
+                let select = document.createElement('select');
+                select.setAttribute('name', this.name);
+                select.id = this.name;
+                dropDown.appendChild(select);
+
+                for (let i = 0; i < this.values.length; i++){
+                    let keyI = Object.keys(this.values[i])[0];
+                    let keyVal = this.values[i][Object.keys(this.values[i])[0]];
+                    let option = document.createElement('option');
+                    option.value = keyI;
+                    option.innerHTML = keyVal;
+                    select.appendChild(option);
+                }
+
+                dropDown.appendChild(generateTooltip(this.description));
+
+                addComponent(dropDown, 'form-components');
+
+                this.resetToInitial();
+            }
+
+            setValue(value){
+                document.getElementById(this.name).value = value;
+            }
+
+            resetToInitial(){
+                this.setValue(this.initialValue);
+            }
+
+            resetToDefault(){
+                this.setValue(this.defaultValue);
+            }
+
+            getName(){
+                return this.name;
+            }
+
+            getValue(){
+                return document.getElementById(this.name).value
             }
         }
 
-        function componentFactory(componentData){
-            console.log(componentData.type)
+        class CheckBox{
+            constructor(component, componentData){
+                this.name = component;
+                this.label = componentData.label;
+                this.description = componentData.description;
+                this.defaultValue = componentData.defaultValue == 'true';
+                this.initialValue = dataObject.props[component] == 'true';
+                this.values = componentData.values;
+
+                this.initialize();
+            }
+
+            initialize(){
+                let checkBox = document.createElement('div');
+                checkBox.classList.add('container');
+                checkBox.classList.add('checkbox-container');
+
+                checkBox.appendChild(generateLabel(this.label));
+
+                let input = document.createElement('input');
+                input.setAttribute('name', this.name);
+                input.id = this.name;
+                input.setAttribute('type', 'checkbox');
+                checkBox.appendChild(input);
+
+                checkBox.appendChild(generateTooltip(this.description));
+
+                addComponent(checkBox, 'form-components');
+
+                this.resetToInitial();
+            }
+
+            setValue(value){
+                document.getElementById(this.name).checked = value;
+            }
+
+            resetToInitial(){
+                this.setValue(this.initialValue);
+            }
+
+            resetToDefault(){
+                this.setValue(this.defaultValue);
+            }
+
+            getName(){
+                return this.name;
+            }
+
+            getValue(){
+                return document.getElementById(this.name).checked
+            }
+
+        }
+
+        class Radio{
+            constructor(component, componentData){
+                this.name = component;
+                this.label = componentData.label;
+                this.description = componentData.description;
+                this.defaultValue = componentData.defaultValue;
+                this.initialValue = dataObject.props[component];
+                this.values = componentData.values;
+
+                this.initialize();
+            }
+
+            initialize(){
+                let radio = document.createElement('div');
+                radio.classList.add('container');
+                radio.classList.add('radio-container');
+
+                radio.appendChild(generateLabel(this.label));
+
+                let radioGroup = document.createElement('div');
+                radioGroup.classList.add('radio-group');
+                for (let i = 0; i < this.values.length; i++){
+                    let optionGroup = document.createElement('div');
+                    optionGroup.classList.add('option-group');
+
+                    let keyI = Object.keys(this.values[i])[0];
+                    let keyVal = this.values[i][Object.keys(this.values[i])[0]];
+                    let option = document.createElement('input');
+                    option.setAttribute('name', this.name);
+                    option.id = keyI;
+                    option.setAttribute('type', 'radio');
+                    option.value = keyVal;
+
+                    optionGroup.appendChild(generateLabel(keyVal, keyI))
+                    optionGroup.appendChild(option);
+
+                    radioGroup.appendChild(optionGroup);
+                }
+
+                radio.appendChild(radioGroup);
+
+                radio.appendChild(generateTooltip(this.description));
+
+                addComponent(radio, 'form-components');
+
+                this.resetToInitial();
+            }
+
+            setValue(value){
+                if (value != ""){
+                    document.querySelector('[name="'+this.name+'"]#'+value).checked = true;
+                } else {
+                    let radios = document.querySelectorAll('[name="'+this.name+'"]');
+                    for (let i = 0; i < radios.length; i++){
+                        radios[i].checked = false;
+                    }
+                }
+            }
+
+            resetToInitial(){
+                this.setValue(this.initialValue);
+            }
+
+            resetToDefault(){
+                this.setValue(this.defaultValue);
+            }
+
+            getName(){
+                return this.name;
+            }
+
+            getValue(){
+                let radios = document.querySelectorAll('[name="'+this.name+'"]');
+                for (let i = 0; i < radios.length; i++){
+                    if (radios[i].checked){
+                        return radios[i].id;
+                    }
+                }
+            }
+        }
+
+        class TextInput{
+            constructor(component, componentData){
+                this.name = component;
+                this.label = componentData.label;
+                this.description = componentData.description;
+                this.defaultValue = componentData.defaultValue;
+                this.initialValue = dataObject.props[component];
+                this.values = componentData.values;
+
+                this.initialize();
+            }
+
+            initialize(){
+                let textInput = document.createElement('div');
+                textInput.classList.add('container');
+                textInput.classList.add('text-input-container');
+
+                textInput.appendChild(generateLabel(this.label));
+
+                let input = document.createElement('input')
+                input.setAttribute('name', this.name);
+                input.id = this.name;
+                input.setAttribute('type', 'text');
+                textInput.appendChild(input);
+
+                textInput.appendChild(generateTooltip(this.description));
+
+                addComponent(textInput, 'form-components');
+                this.resetToInitial();
+            }
+
+            setValue(value){
+                document.getElementById(this.name).value = value;
+            }
+
+            resetToInitial(){
+                this.setValue(this.initialValue);
+            }
+
+            resetToDefault(){
+                this.setValue(this.defaultValue);
+            }
+
+            getName(){
+                return this.name;
+            }
+
+            getValue(){
+                return document.getElementById(this.name).value
+            }
+        }
+
+        // Basic functions: 
+
+        function init(){
+            for (let key in dataObject.meta){
+                currentKey = key;
+                componentFactory(key, dataObject.meta[key]);
+            }
+        }
+
+        function componentFactory(component, componentData){
             switch(componentData.type){
-                case 'dropdown': createDropdown(componentData);
+                case 'dropdown': componentList.push(new DropDown(component, componentData));
                 break;
-                case 'checkbox': createCheckbox(componentData);
+                case 'checkbox': componentList.push(new CheckBox(component, componentData));
                 break;
-                case 'radio': createRadio(componentData);
+                case 'radio': componentList.push(new Radio(component, componentData));
                 break;
-                case 'input': createTextInput(componentData);
+                case 'input': componentList.push(new TextInput(component, componentData));
                 break;
                 default: console.log('Incorrect component type for component \''+componentData.label+'\'');
             }
         }
 
-        function createDropdown(componentData){
-            console.log('createDropdown called with component data:');
-            console.log(componentData);
-
-            let dropDown = document.createElement('div');
-            dropDown.classList.add('dd');
-
-            dropDown.appendChild(generateLabel(componentData.label));
-
-            let select = document.createElement('select');
-            select.setAttribute('name', currentKey);
-            select.id = currentKey;
-            dropDown.appendChild(select);
-
-            for (let i = 0; i < componentData.values.length; i++){
-                let keyI = Object.keys(componentData.values[i])[0];
-                let keyVal = componentData.values[i][Object.keys(componentData.values[i])[0]];
-                let option = document.createElement('option');
-                option.value = keyI;
-                option.innerHTML = keyVal;
-                select.appendChild(option);
-            }
-
-            dropDown.appendChild(generateTooltip(componentData.description));
-
-            addComponent(dropDown, 'form-components');
-        }
-
-        function createCheckbox(componentData){
-            console.log('createCheckbox called with component data:');
-            console.log(componentData);
-
-            let checkBox = document.createElement('div');
-            checkBox.classList.add('cb');
-
-            checkBox.appendChild(generateLabel(componentData.label));
-
-            let input = document.createElement('input');
-            input.setAttribute('name', currentKey);
-            input.id = currentKey;
-            input.setAttribute('type', 'checkbox');
-            input.value = currentKey;
-            checkBox.appendChild(input);
-
-            checkBox.appendChild(generateTooltip(componentData.description));
-
-            addComponent(checkBox, 'form-components');
-
-        }
-
-        function createRadio(componentData){
-            console.log('createRadio called with component data:')
-            console.log(componentData)
-
-            let radio = document.createElement('div');
-            radio.classList.add('rd');
-
-            radio.appendChild(generateLabel(componentData.label));
-
-            let radioGroup = document.createElement('div');
-            radioGroup.classList.add('radio-group');
-            for (let i = 0; i < componentData.values.length; i++){
-                let keyI = Object.keys(componentData.values[i])[0];
-                let keyVal = componentData.values[i][Object.keys(componentData.values[i])[0]];
-                let option = document.createElement('input');
-                option.setAttribute('name', currentKey);
-                option.id = keyI;
-                option.setAttribute('type', 'radio');
-                option.value = keyVal;
-
-                radioGroup.appendChild(generateLabel(keyVal, keyI))
-                radioGroup.appendChild(option);
-
-            }
-            radio.appendChild(radioGroup);
-
-            radio.appendChild(generateTooltip(componentData.description));
-
-            addComponent(radio, 'form-components');
-        }
-
-        function createTextInput(componentData){
-            console.log('createTextInput called with component data:')
-            console.log(componentData)
-        }
-
         function setDefaults(){
-
+            for (let i = 0; i< componentList.length; i++ ){
+                componentList[i].resetToDefault();
+            }
         }
 
         function resetToInitial(){
-
+            for (let i = 0; i< componentList.length; i++ ){
+                componentList[i].resetToInitial();
+            }
         }
 
         function saveValues(){
-
-            for (let key in dataObject.meta){
-                console.log(document.getElementsByName(key) );
-            }
-
+            fetchValues();
             document.getElementById('popup-content').innerHTML = generateSavedProps();
             showPopup();
         }
+
+        function fetchValues(){
+            let dataToSave = {};
+            for (let i = 0; i < componentList.length; i++){
+                dataToSave[componentList[i].getName()] = componentList[i].getValue();
+            }
+
+            dataObject.props = dataToSave;
+        }
+
+        // Helper functions: 
 
         function generateLabel(text, target){
             let label = document.createElement('label');
@@ -236,13 +471,12 @@
 
         function generateTooltip(text){
             let tooltip = document.createElement('span');
-            tooltip.classList.add('tooltip');
+            tooltip.classList.add('tooltiptext');
             tooltip.innerHTML = text;
             return tooltip;
         }
 
         function addComponent(component, parent){
-            console.log('addComponenent called')
             let el = document.getElementsByClassName(parent)[0];
             el.appendChild(component);
         }
@@ -258,11 +492,13 @@
         }
 
         function showPopup(){
-            document.getElementById('popup').classList.remove('gone')
+            document.getElementById('popup').classList.remove('gone');
+            document.getElementById('popup-fader').classList.remove('gone');
         }
 
         function hidePopup(){
             document.getElementById('popup').classList.add('gone')
+            document.getElementById('popup-fader').classList.add('gone')
         }
         
         document.addEventListener('DOMContentLoaded', (e) => {
@@ -275,7 +511,7 @@
     <div class='wrapper'>
         <div class='form'>
             <div class='form-header'>
-
+                Auto-generated form
             </div>
             <div class='form-components'>
 
@@ -286,6 +522,7 @@
                 <button type='button' onclick='saveValues()'>Save</button>
             </div>
         </div>
+        <div id='popup-fader' class='popup-fader gone'></div>
         <div id='popup' class='popup gone'>
             <div class='popup-header'>
                 <span class='popup-heading'>Current data:</span>
