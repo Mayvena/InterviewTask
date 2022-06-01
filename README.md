@@ -1,6 +1,7 @@
-# NuveiTask
+# Job Application Task
 
-Task:
+The following task was given to me during the application process for a developer position:
+
 The following json structure (example.json is attached) containing 2 important objects:
 
 1. props which defines selected properties' values
